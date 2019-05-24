@@ -16,7 +16,9 @@ import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
-import com.uneatlantico.database.Conexion;
+import com.uneatlantico.database.*;
+import org.apache.commons.lang.StringUtils;
+import org.apache.tika.exception.TikaException;
 
 /**
  *
@@ -29,7 +31,8 @@ public class Main extends javax.swing.JFrame {
      */
     private int initWidt,initheight;
     private Conexion conn = new Conexion();
-    public Main() {
+    private List<Thread> hilos = new ArrayList<Thread>();
+    public Main() throws IOException, TikaException {
         initComponents();
         this.initWidt=this.getWidth();
         this.initheight=this.getHeight();
@@ -43,6 +46,8 @@ public class Main extends javax.swing.JFrame {
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
+        hilos = conn.Indexacion(hilos);
+        hilos.forEach(item->item.start());
     }
 
     /**
@@ -65,6 +70,7 @@ public class Main extends javax.swing.JFrame {
         itemIndexarCarpeta = new javax.swing.JMenuItem();
         itemIndexarArchivo = new javax.swing.JMenuItem();
         menuOpciones = new javax.swing.JMenu();
+        jMenuItem1 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -132,6 +138,15 @@ public class Main extends javax.swing.JFrame {
         jMenuBar1.add(menuArchivo);
 
         menuOpciones.setText("Opciones");
+
+        jMenuItem1.setText("Borrar todo");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        menuOpciones.add(jMenuItem1);
+
         jMenuBar1.add(menuOpciones);
 
         setJMenuBar(jMenuBar1);
@@ -169,7 +184,7 @@ public class Main extends javax.swing.JFrame {
         
         if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-            File fiel = new File(chooser.getCurrentDirectory().getPath());
+            File fiel = chooser.getCurrentDirectory();
             /*String[] directories = fiel.list(new FilenameFilter() {
   @Override
   public boolean accept(File current, String name) {
@@ -177,16 +192,34 @@ public class Main extends javax.swing.JFrame {
   }
 });
             System.out.println(Arrays.toString(directories));*/
-            listFilesForFolder(fiel);
+          
+        List<String> padres = new ArrayList();
+        if(!conn.CarpetExist(fiel.getName())){
+        padres.add(0, fiel.getName());
+        conn.InsertCarpeta(fiel.getName(), 1, "");
+        listFilesForFolder(fiel,0,padres);
+        }
         }
     }//GEN-LAST:event_itemIndexarCarpetaActionPerformed
 
-    public void listFilesForFolder(final File folder) {
+    private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
+       conn.borrarTodo();
+    }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    public void listFilesForFolder(final File folder, int index,List<String>padres) {
+        int indexx=index;
+        System.out.println(index);
     for (final File fileEntry : folder.listFiles()) {
         if (fileEntry.isDirectory()) {
-            listFilesForFolder(fileEntry);
+                padres.add( fileEntry.getName());
+                if(conn.InsertCarpeta(fileEntry.getName(), 0, padres.get(index)))
+                    System.out.println((StringUtils.repeat("    ",indexx+1))+"-"+fileEntry.getName());
+                indexx++;
+            listFilesForFolder(fileEntry,indexx,padres);
         } else {
-            System.out.println(fileEntry.getName());
+            System.out.println(padres.get(indexx));
+            if(conn.InsertArchivo(fileEntry.getName(), fileEntry.getPath(), padres.get(index)))
+             System.out.println(StringUtils.repeat("   ",indexx+2)+">"+fileEntry.getName());
         }
     }
 }
@@ -220,7 +253,13 @@ public class Main extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new Main().setVisible(true);
+                try {
+                    new Main().setVisible(true);
+                } catch (IOException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (TikaException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         });
     }
@@ -232,6 +271,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemIndexarArchivo;
     private javax.swing.JMenuItem itemIndexarCarpeta;
     private javax.swing.JMenuBar jMenuBar1;
+    private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JTree jTree1;
     private javax.swing.JMenu menuArchivo;
