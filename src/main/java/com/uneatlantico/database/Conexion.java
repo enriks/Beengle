@@ -44,8 +44,11 @@ public class Conexion{
                     pstmt.setString(k+1, argumentos.get(k));
                     
             }
-            pstmt.executeUpdate();
+            pstmt.execute();
+           
             result=true;
+             pstmt.close();
+            conn.close();
         }catch(SQLException e){
             System.err.println(e.getMessage());
         }
@@ -62,6 +65,8 @@ public class Conexion{
         if(result.next()){
             resultado=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -80,6 +85,8 @@ public class Conexion{
         if(result.next()){
             resultado=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -98,6 +105,8 @@ public class Conexion{
         if(res.next()){
             result=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -116,6 +125,8 @@ public class Conexion{
         if(res.next()){
             result=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -133,6 +144,8 @@ public class Conexion{
         if(res.next()){
             result=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -145,11 +158,13 @@ public class Conexion{
         ResultSet res = null;
         boolean result =false;
         try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra = (Select idPalabra from Palabra where nombrePalabra ='"+nombrePalabra+"') and idDocumento=(select idDoc from Archivos where nombreDoc = '"+nombreDoc+"')")){
+                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra = "+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc)+"")){
          res = pstmt.executeQuery();
         if(res.next()){
             result=true;
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -157,6 +172,42 @@ public class Conexion{
         
         return result;
     }
+         
+         public int  NumDocPalExist(String nombre)
+         {
+             int num = 0;
+             try {
+                 Connection conn = this.connect();
+                 PreparedStatement psmt = conn.prepareStatement("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.nombrePalabra='"+nombre+"'");
+                 ResultSet res = psmt.executeQuery();
+                 if(res.next()){
+                     num = res.getInt("numero");
+                 }
+                 psmt.close();
+            
+             } catch (SQLException e) {
+                 System.err.println(e.getMessage());
+             }
+             return num;
+         }
+         
+         public int  NumDocPalExist(int id)
+         {
+             int num = 0;
+             try {
+                 Connection conn = this.connect();
+                 PreparedStatement psmt = conn.prepareStatement("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.idPalabra="+id+"");
+                 ResultSet res = psmt.executeQuery();
+                 if(res.next()){
+                     num = res.getInt("numero");
+                 }
+                 psmt.close();
+            
+             } catch (SQLException e) {
+                 System.err.println(e.getMessage());
+             }
+             return num;
+         }
          /**
           * esto siguiente es solo para ejecutar inserts en diferentes tablas de la base de datos
           */
@@ -202,11 +253,11 @@ public class Conexion{
              }
              return result;
          }
-         public boolean InsertPalabra(String nombre,String doc)
+         public boolean InsertPalabra(String nombre,String doc,int tf,int numTot)
          {
              boolean result =false;
              List<String> a = new ArrayList();
-                if(!PalabraExtist(nombre)||nombre.isEmpty()){
+                if(!PalabraExtist(nombre)){
                 a.add(nombre);
                 result = QueryExecute("Insert into Palabra(nombrePalabra) values (?)", a);
                 if(ArchivoExist(doc)){
@@ -214,21 +265,42 @@ public class Conexion{
                 a.add(String.valueOf(IdPalabra(nombre)));
                 a.add(String.valueOf(IdArchivo(doc)));
                 result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values (?,?)", a);
+                if(PalabraInsideDocExist(nombre, doc))
+                {
+                    a=new ArrayList();
+                    a.add(String.valueOf((double)tf/numTot));
+                    a.add(String.valueOf(IdRelacion(nombre, doc)));
+                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values (?,?)",a);
+                }else result = false;
                 }
                 else result =false;
-             }
+             }else{
+                    if(ArchivoExist(doc)){
+                a= new ArrayList<>();
+                a.add(String.valueOf(IdPalabra(nombre)));
+                a.add(String.valueOf(IdArchivo(doc)));
+                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values (?,?)", a);
+                if(PalabraInsideDocExist(nombre, doc))
+                {
+                    a=new ArrayList();
+                    a.add(String.valueOf((double)tf/numTot));
+                    a.add(String.valueOf(IdRelacion(nombre, doc)));
+                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values (?,?)",a);
+                }else result = false;
+                }
+                else result =false;
+                }
              return result;
          }
-         public boolean InsertEstadisticasPalabra(String nombrePalabra,String nombreDocumento,int tf,int idf)
+         public boolean InsertEstadisticasPalabra(String nombrePalabra,String nombreDocumento,double tf,double idf)
          {
              boolean result =false;
              if(PalabraInsideDocExist(nombrePalabra,nombreDocumento)){
              List<String> a = new ArrayList();
-             a.add(String.valueOf(tf));
              a.add(String.valueOf(idf));
              a.add(String.valueOf(tf*idf));
              a.add(String.valueOf(IdRelacion(nombrePalabra, nombreDocumento)));
-             result = QueryExecute("Insert into EstadisticasPalabra(tf,idf,tf-idf,idRelacion) values (?,?,?,?)", a);
+             result = QueryExecute("update EstadisticasPalabras set idf = ?, tfidf =? where idRelacion = ?", a);
              }
              return result;
          }
@@ -247,6 +319,8 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idCarpeta");
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -265,6 +339,8 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idDoc");
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -285,6 +361,8 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idPalabra");
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -300,11 +378,13 @@ public class Conexion{
              {
                         
         try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra ="+nombrePalabra+" and idDocumento="+nombreDoc)){
+                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra ="+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc))){
         ResultSet res = pstmt.executeQuery();   
         if(res.next()){
             result= res.getInt("idRelacion");
         }
+        pstmt.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -320,7 +400,8 @@ public class Conexion{
              QueryExecute("delete from CarpChilds", a);
              QueryExecute("delete from DocCarp", a);
          }
-         public List<Thread> Indexacion(List<Thread> hilos) throws IOException, TikaException, SQLException{
+         public List<List> Indexacion(List<Thread> hilos,List<List> datos) throws IOException, TikaException, SQLException{
+             List<List> todo = new ArrayList<>();
              try(Connection conn=this.connect();
                      PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos")){
                  ResultSet res = pstmt.executeQuery();
@@ -331,9 +412,11 @@ public class Conexion{
                      while(res2.next()){
                          k++;
                      }
+                     pstmt2.close();
                      if(k==0)
                      {
                          List<List> lista = anal_isis.Palabras(anal_isis.parseExample(new File(res.getString("rutaDoc"))));
+                         datos.add(lista);
                          String nombredoc = res.getString("nombreDoc");
                          Runnable runnable = ()->{
                              for(int j =0; j<lista.get(0).size();j++){
@@ -344,24 +427,64 @@ public class Conexion{
                          hilos.add(new Thread(runnable));
                      }
                  }
+                 pstmt.close();
+            
              }catch(SQLException e){
                  System.err.println(e.getMessage());
              }
+             todo.add(hilos);
+             todo.add(datos);
              
-             return hilos;
+             return todo;
          }
          private boolean manejoPalabras(List<List> lista,String Palabra,String doc,int tf,int j){
              boolean resp=false;
               System.out.println("Empezo el hilo");
                             
                                 
-                                     if(InsertPalabra(Palabra, doc)){
+                                     if(InsertPalabra(Palabra, doc,tf, lista.get(0).size())){
                                          resp=true;
-                                         System.out.println("Palabra: "+lista.get(0).get(j)+" repeticiones: "+lista.get(1).get(j));
-                                         InsertEstadisticasPalabra(lista.get(0).get(j).toString(), doc, (int)lista.get(1).get(j), j);
+                                         System.out.println("Palabra: "+lista.get(0).get(j)+" repeticiones: "+tf);
                                                  }
                                  
                              
+             return resp;
+         }
+         
+         public boolean CalculoPalabra(List<List> listaPalabras)
+         {
+             boolean resp = false;
+             try {
+                 Connection conn = this.connect();
+                 PreparedStatement psmt = conn.prepareStatement("Select * from PalabraDocumento");
+                 ResultSet res = psmt.executeQuery();
+                 while(res.next())
+                 {
+                     PreparedStatement psmt2 = conn.prepareStatement("select Palabra.nombrePalabra nombrePalabra, Archivos.nombreDoc nombreDoc,EstadisticasPalabras.tf tf from Archivos,Palabra, PalabraDocumento, EstadisticasPalabras where EstadisticasPalabras.idRelacion = PalabraDocumento.idRelacion and PalabraDocumento.idPalabra=Palabra.idPalabra and PalabraDocumento.idDocumento=Archivos.idDoc and PalabraDocumento.idPalabra= "+res.getInt("idPalabra"));
+                     ResultSet res2 = psmt2.executeQuery();
+                     while(res2.next()){
+                     for(List<List> lista : listaPalabras)
+                     {
+                         for(int k =0;k<lista.get(1).size();k++){
+                         
+                             try {
+                                 String palara =res2.getString("nombrePalabra");
+                                 if(lista.get(0).get(k).equals(palara))
+                                     InsertEstadisticasPalabra(palara, res2.getString("nombreDoc"), ((int)lista.get(1).get(k)/lista.get(1).size()), (Math.log10(listaPalabras.size()/NumDocPalExist(palara))+1));
+                                     } catch (SQLException ex) {
+                                 System.err.println(ex.getMessage());
+                             }
+                            
+                     }
+                     }
+                     }
+                     psmt2.close();
+                 }
+                 psmt.close();
+            
+             } catch (SQLException e) {
+                 System.err.println(e.getMessage());
+             }
              return resp;
          }
 }

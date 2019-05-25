@@ -5,6 +5,7 @@
  */
 package com.uneatlantico.forms;
 
+import com.sun.javafx.scene.control.skin.VirtualFlow;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,6 +35,7 @@ public class Main extends javax.swing.JFrame {
     private int initWidt,initheight;
     private Conexion conn = new Conexion();
     private List<Thread> hilos = new ArrayList<>();
+    private List<List> datosPalabras = new ArrayList<>();
     public Main() throws IOException, TikaException, SQLException {
         initComponents();
         this.initWidt=this.getWidth();
@@ -48,7 +50,10 @@ public class Main extends javax.swing.JFrame {
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
-        hilos = conn.Indexacion(hilos);
+        List<List> todo = conn.Indexacion(hilos,datosPalabras);
+        hilos = todo.get(0);
+        datosPalabras=todo.get(1);
+        if(hilos.size()!=0){
         hilos.forEach(item->{
             item.start();});
         Thread terminated = new Thread(()->{
@@ -60,11 +65,15 @@ public class Main extends javax.swing.JFrame {
                    }
                }
                if(terminatedThreads==hilos.size()){
-                   System.err.println("Terminaron");
+                   conn.CalculoPalabra(datosPalabras);
+                   break;
                }
            } 
         });
+        terminated.start();
+        }
     }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
