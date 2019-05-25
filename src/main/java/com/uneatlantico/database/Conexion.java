@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.tika.exception.TikaException;
+import org.jsoup.select.Evaluator;
 import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteOpenMode;
 /**
@@ -51,6 +52,7 @@ public class Conexion{
            
             result=true;
              pstmt.close();
+             conn.close();
         }catch(SQLException e){
             System.err.println(e.getMessage());
         }
@@ -70,6 +72,7 @@ public class Conexion{
         }
         pstmt.close();
            result.close();
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -90,6 +93,7 @@ public class Conexion{
         }
         pstmt.close();
           result.close();
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -110,6 +114,7 @@ public class Conexion{
         }
         pstmt.close();
             res.close();
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -130,6 +135,7 @@ public class Conexion{
         }
         pstmt.close();
             res.close();
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -147,8 +153,7 @@ public class Conexion{
         if(res.next()){
             result=true;
         }
-        pstmt.close();
-            res.close();
+            
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -166,8 +171,10 @@ public class Conexion{
         if(res.next()){
             result=true;
         }
-        pstmt.close();
-            res.close();
+            res.close();        
+            pstmt.close();
+
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -186,8 +193,10 @@ public class Conexion{
                  if(res.next()){
                      num = res.getInt("numero");
                  }
-                 psmt.close();
             res.close();
+                             psmt.close();
+
+           conn.close();
              } catch (SQLException e) {
                  System.err.println(e.getMessage());
              }
@@ -204,8 +213,10 @@ public class Conexion{
                  if(res.next()){
                      num = res.getInt("numero");
                  }
-                 psmt.close();
             res.close();
+                             psmt.close();
+
+           conn.close();
              } catch (SQLException e) {
                  System.err.println(e.getMessage());
              }
@@ -256,8 +267,9 @@ public class Conexion{
              }
              return result;
          }
-         public boolean InsertPalabra(String nombre,String doc)
-         {
+         public boolean InsertPalabra(String nombre,String doc) throws SQLException
+         { if(this.connect().isClosed())
+                 System.err.println("Me cago en dios");
              boolean result =false;
              List<String> a = new ArrayList();
                 if(!PalabraExtist(nombre)){
@@ -311,8 +323,10 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idCarpeta");
         }
-        pstmt.close();
             res.close();
+                    pstmt.close();
+
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -331,8 +345,10 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idDoc");
         }
-        pstmt.close();
             res.close();
+                    pstmt.close();
+
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -353,8 +369,10 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idPalabra");
         }
-        pstmt.close();
             res.close();
+                    pstmt.close();
+
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -375,8 +393,10 @@ public class Conexion{
         if(res.next()){
             result= res.getInt("idRelacion");
         }
-        pstmt.close();
             res.close();
+                    pstmt.close();
+
+           conn.close();
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -395,6 +415,10 @@ public class Conexion{
                  if(res.next()){
                      nombre=res.getString("nombrePalabra");
                  }
+                 res.close();
+                 psmt.close();
+                 
+           conn.close();
              }catch(SQLException e){
                  System.err.println(e.getMessage());
              }
@@ -408,6 +432,10 @@ public class Conexion{
                  if(res.next()){
                      nombre=res.getString("nombre");
                  }
+                 res.close();
+                 psmt.close();
+                 
+           conn.close();
              }catch(SQLException e){
                  System.err.println(e.getMessage());
              }
@@ -422,10 +450,49 @@ public class Conexion{
                  if(res.next()){
                      nombre=res.getString("nombreDoc");
                  }
+                 res.close();
+                 psmt.close();
+           conn.close();
              }catch(SQLException e){
                  System.err.println(e.getMessage());
              }
              return nombre;
+         }
+         
+         /*
+         Esto es para sacar una lista de palabras con el id o nombre de un archivo
+         */
+         public List<String> PalByDoc(int id){
+             List<String> pal = new ArrayList();
+             try(Connection conn = this.connect();
+                     PreparedStatement psmt = conn.prepareStatement("Select Palabra.nombrePalabra nombrePalabra from Palabra,PalabraDocumento where PalabraDocumento.idPalabra = Palabra.idPalabra and PalabraDocumento.idDocumento="+id)){
+                 ResultSet res = psmt.executeQuery();
+                 while(res.next()){
+                    pal.add(res.getString("nombrePalabra"));
+                 }
+                 res.close();
+                 psmt.close();
+           conn.close();
+             }catch(SQLException e){
+                 System.err.println(e.getMessage());
+             }
+             return pal;
+         }
+         public List<String> PalByDoc(String nombre){
+             List<String> pal = new ArrayList();
+             try(Connection conn = this.connect();
+                     PreparedStatement psmt = conn.prepareStatement("Select Palabra.nombrePalabra nombrePalabra from Palabra,PalabraDocumento where PalabraDocumento.idPalabra = Palabra.idPalabra and PalabraDocumento.idDocumento="+IdArchivo(nombre))){
+                 ResultSet res = psmt.executeQuery();
+                 while(res.next()){
+                    pal.add(res.getString("nombrePalabra"));
+                 }
+                 res.close();
+                 psmt.close();
+           conn.close();
+             }catch(SQLException e){
+                 System.err.println(e.getMessage());
+             }
+             return pal;
          }
          //////borrar//////////////////////////////////////////////////////////////////
          public void borrarTodo(){
@@ -435,15 +502,21 @@ public class Conexion{
              QueryExecute("delete from CarpChilds", a);
              QueryExecute("delete from DocCarp", a);
          }
+         /**
+          * INDEXACIOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
+          * @param datos
+          * @return
+          * @throws IOException
+          * @throws TikaException
+          * @throws SQLException 
+          */
          public List<List> Indexacion(List<List> datos) throws IOException, TikaException, SQLException{
              
              try(Connection conn=this.connect();
-                     PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos"); ResultSet res = pstmt.executeQuery()){
+                     PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos")){
+                 ResultSet res = pstmt.executeQuery();
                  while(res.next()){
-                    
-                     int k =0;
-                     if(k==0)
-                     {
+                     
                          List<List> lista = anal_isis.Palabras(anal_isis.parseExample(new File(res.getString("rutaDoc"))));
                          datos.add(lista);
                          String nombredoc = res.getString("nombreDoc");
@@ -454,7 +527,9 @@ public class Conexion{
                                  }
                              }
                          
-                     }
+                     res.close();
+                     pstmt.close();
+           conn.close();
                  
              }catch(SQLException e){
                  System.err.println(e.getMessage());

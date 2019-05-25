@@ -50,13 +50,13 @@ public class Main extends javax.swing.JFrame {
             System.err.println(ex.getMessage());
         }
         List<List> todo = conn.Indexacion(datosPalabras);
-        datosPalabras=todo.get(1);
+        /*
         if(todo.size()!=0){
-            
+            datosPalabras=todo.get(1);
                    conn.CalculoPalabra(datosPalabras);
                   
         
-        }
+        }*/
     }
     
 
@@ -194,7 +194,7 @@ public class Main extends javax.swing.JFrame {
         
         if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
-            File fiel = chooser.getCurrentDirectory();
+            File fiel = chooser.getSelectedFile();
             /*String[] directories = fiel.list(new FilenameFilter() {
   @Override
   public boolean accept(File current, String name) {
