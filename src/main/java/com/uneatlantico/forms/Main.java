@@ -17,6 +17,8 @@ import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import com.uneatlantico.database.*;
+import com.uneatlantico.data.*;
+import java.sql.SQLException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tika.exception.TikaException;
 
@@ -31,8 +33,8 @@ public class Main extends javax.swing.JFrame {
      */
     private int initWidt,initheight;
     private Conexion conn = new Conexion();
-    private List<Thread> hilos = new ArrayList<Thread>();
-    public Main() throws IOException, TikaException {
+    private List<Thread> hilos = new ArrayList<>();
+    public Main() throws IOException, TikaException, SQLException {
         initComponents();
         this.initWidt=this.getWidth();
         this.initheight=this.getHeight();
@@ -47,7 +49,21 @@ public class Main extends javax.swing.JFrame {
             System.err.println(ex.getMessage());
         }
         hilos = conn.Indexacion(hilos);
-        hilos.forEach(item->item.start());
+        hilos.forEach(item->{
+            item.start();});
+        Thread terminated = new Thread(()->{
+           while(true){
+               int terminatedThreads=0;
+               for(Thread hilo : hilos){
+                   if(hilo.getState()==Thread.State.TERMINATED){
+                       terminatedThreads++;
+                   }
+               }
+               if(terminatedThreads==hilos.size()){
+                   System.err.println("Terminaron");
+               }
+           } 
+        });
     }
 
     /**
@@ -259,6 +275,8 @@ public class Main extends javax.swing.JFrame {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 } catch (TikaException ex) {
                     Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                } catch (SQLException ex) {
+                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
         });
@@ -278,4 +296,6 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenu menuOpciones;
     private javax.swing.JTextField txtBusqueda;
     // End of variables declaration//GEN-END:variables
+
+  
 }

@@ -5,6 +5,7 @@
  */
 package com.uneatlantico.database;
 
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -15,12 +16,14 @@ import java.util.List;
 import com.uneatlantico.data.TikaAnalysis;
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.tika.exception.TikaException;
 /**
  *
  * @author manuel.coto
  */
-public class Conexion {
+public class Conexion{
     private TikaAnalysis anal_isis = new TikaAnalysis();
     private Connection connect(){
         Connection conn = null;
@@ -203,14 +206,14 @@ public class Conexion {
          {
              boolean result =false;
              List<String> a = new ArrayList();
-                if(!PalabraExtist(nombre)){
+                if(!PalabraExtist(nombre)||nombre.isEmpty()){
                 a.add(nombre);
-                result = QueryExecute("Insert into Palabra(nombre) values (?)", a);
+                result = QueryExecute("Insert into Palabra(nombrePalabra) values (?)", a);
                 if(ArchivoExist(doc)){
                 a= new ArrayList<>();
                 a.add(String.valueOf(IdPalabra(nombre)));
                 a.add(String.valueOf(IdArchivo(doc)));
-                result=QueryExecute("Insert into PalabraDocumento values(?,?)", a);
+                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values (?,?)", a);
                 }
                 else result =false;
              }
@@ -275,12 +278,12 @@ public class Conexion {
              if(PalabraExtist(nombre))
              {
                  List<String> a = new ArrayList();
-        a.add("'"+nombre+"'");
+        a.add(nombre);
         try (Connection conn = this.connect();
                 PreparedStatement pstmt = conn.prepareStatement("Select * from Palabra where nombrePalabra = '"+nombre+"'")){
         ResultSet res = pstmt.executeQuery();
         if(res.next()){
-            result= res.getInt("idPalabras");
+            result= res.getInt("idPalabra");
         }
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -317,7 +320,7 @@ public class Conexion {
              QueryExecute("delete from CarpChilds", a);
              QueryExecute("delete from DocCarp", a);
          }
-         public List<Thread> Indexacion(List<Thread> hilos) throws IOException, TikaException{
+         public List<Thread> Indexacion(List<Thread> hilos) throws IOException, TikaException, SQLException{
              try(Connection conn=this.connect();
                      PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos")){
                  ResultSet res = pstmt.executeQuery();
@@ -331,13 +334,13 @@ public class Conexion {
                      if(k==0)
                      {
                          List<List> lista = anal_isis.Palabras(anal_isis.parseExample(new File(res.getString("rutaDoc"))));
+                         String nombredoc = res.getString("nombreDoc");
                          Runnable runnable = ()->{
-                             System.out.println("Empezo el hilo");
                              for(int j =0; j<lista.get(0).size();j++){
-                                 System.out.println("Palabra: "+lista.get(0).get(j)+" repeticiones: "+lista.get(1).get(j));
-                                 
+                                 manejoPalabras(lista, lista.get(0).get(j).toString(), nombredoc, (int)lista.get(1).get(j),j);
                              }
                          };
+                         
                          hilos.add(new Thread(runnable));
                      }
                  }
@@ -346,5 +349,19 @@ public class Conexion {
              }
              
              return hilos;
+         }
+         private boolean manejoPalabras(List<List> lista,String Palabra,String doc,int tf,int j){
+             boolean resp=false;
+              System.out.println("Empezo el hilo");
+                            
+                                
+                                     if(InsertPalabra(Palabra, doc)){
+                                         resp=true;
+                                         System.out.println("Palabra: "+lista.get(0).get(j)+" repeticiones: "+lista.get(1).get(j));
+                                         InsertEstadisticasPalabra(lista.get(0).get(j).toString(), doc, (int)lista.get(1).get(j), j);
+                                                 }
+                                 
+                             
+             return resp;
          }
 }
