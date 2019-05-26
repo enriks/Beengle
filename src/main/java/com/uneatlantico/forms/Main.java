@@ -50,39 +50,7 @@ public class Main extends javax.swing.JFrame {
         } catch (IOException ex) {
             System.err.println(ex.getMessage());
         }
-<<<<<<< HEAD
-        List<List> todo = conn.Indexacion(datosPalabras);
-        /*
-        if(todo.size()!=0){
-            datosPalabras=todo.get(1);
-                   conn.CalculoPalabra(datosPalabras);
-                  
         
-        }*/
-=======
-        List<List> todo = conn.Indexacion(hilos,datosPalabras);
-        hilos = todo.get(0);
-        datosPalabras=todo.get(1);
-        if(hilos.size()!=0){
-        hilos.forEach(item->{
-            item.start();});
-        Thread terminated = new Thread(()->{
-           while(true){
-               int terminatedThreads=0;
-               for(Thread hilo : hilos){
-                   if(hilo.getState()==Thread.State.TERMINATED){
-                       terminatedThreads++;
-                   }
-               }
-               if(terminatedThreads==hilos.size()){
-                   conn.CalculoPalabra(datosPalabras);
-                   break;
-               }
-           } 
-        });
-        terminated.start();
-        }
->>>>>>> parent of f530aab... reverse
     }
     
 
@@ -235,13 +203,27 @@ public class Main extends javax.swing.JFrame {
         conn.InsertCarpeta(fiel.getName(), 1, "");
         listFilesForFolder(fiel,0,padres);
         }
+            try {
+                Index();
+            } catch (IOException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (TikaException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (SQLException ex) {
+                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }//GEN-LAST:event_itemIndexarCarpetaActionPerformed
 
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
        conn.borrarTodo();
     }//GEN-LAST:event_jMenuItem1ActionPerformed
-
+/**
+ * Funcionessssssssssssssssssssssssssss
+ * @param folder
+ * @param index
+ * @param padres 
+ */
     public void listFilesForFolder(final File folder, int index,List<String>padres) {
         int indexx=index;
         System.out.println(index);
@@ -259,6 +241,30 @@ public class Main extends javax.swing.JFrame {
         }
     }
 }
+    public void Index() throws IOException, TikaException, SQLException{
+        List<List> todo = conn.Indexacion(this.hilos,this.datosPalabras);
+        hilos = todo.get(0);
+        datosPalabras=todo.get(1);
+        if(hilos.size()!=0){
+        hilos.forEach(item->{
+            item.start();});
+        Thread terminated = new Thread(()->{
+           while(true){
+               int terminatedThreads=0;
+               for(Thread hilo : hilos){
+                   if(hilo.getState()==Thread.State.TERMINATED){
+                       terminatedThreads++;
+                   }
+               }
+               if(terminatedThreads==hilos.size()){
+                   conn.CalculoPalabra(datosPalabras);
+                   break;
+               }
+           } 
+        });
+        terminated.start();
+        }
+    }
     /**
      * @param args the command line arguments
      */

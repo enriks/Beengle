@@ -16,49 +16,36 @@ import java.util.List;
 import com.uneatlantico.data.TikaAnalysis;
 import java.io.File;
 import java.io.IOException;
+import java.sql.Statement;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.tika.exception.TikaException;
-<<<<<<< HEAD
-import org.jsoup.select.Evaluator;
-import org.sqlite.SQLiteConfig;
-import org.sqlite.SQLiteOpenMode;
-=======
->>>>>>> parent of f530aab... reverse
+
 /**
  *
  * @author manuel.coto
  */
 public class Conexion{
     private TikaAnalysis anal_isis = new TikaAnalysis();
-    private Connection connect(){
-        Connection conn = null;
+    private Connection conn = null;
+    private Statement stmt= null;
+    public Conexion(){
         String url= "jdbc:sqlite:src/main/resources/files/Index.db";
         try {
+            Class.forName("org.sqlite.JDBC");
             conn = DriverManager.getConnection(url);
-        } catch (SQLException e) {
+        } catch (Exception e) {
             System.err.println(e.getMessage());
         }
-        return conn;
     }
-    public boolean QueryExecute(String query, List<String> argumentos)
+    public boolean QueryExecute(String query)
     {
         boolean result = false;
-        try(Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement(query)){
-            for(int k =0;k<argumentos.size();k++){
-                    pstmt.setString(k+1, argumentos.get(k));
-                    
-            }
-            pstmt.execute();
+        try{
+            this.stmt = conn.createStatement();
+            stmt.executeUpdate(query);
            
             result=true;
-             pstmt.close();
-<<<<<<< HEAD
-             conn.close();
-=======
-            conn.close();
->>>>>>> parent of f530aab... reverse
         }catch(SQLException e){
             System.err.println(e.getMessage());
         }
@@ -69,19 +56,14 @@ public class Conexion{
     {
         ResultSet result = null;
         boolean resultado =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Carpetas where nombre = '"+nombre+"'")){
-         result = pstmt.executeQuery();
+        try {
+                this.stmt = conn.createStatement();
+                
+         result = stmt.executeQuery("Select * from Carpetas where nombre = '"+nombre+"'");
         if(result.next()){
             resultado=true;
         }
-        pstmt.close();
-<<<<<<< HEAD
-           result.close();
-           conn.close();
-=======
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -94,19 +76,13 @@ public class Conexion{
     {
         ResultSet result = null;
         boolean resultado =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos where nombreDoc = '"+nombre+"'")){
-         result = pstmt.executeQuery();
+        try {
+               this.stmt = conn.createStatement();
+         result = stmt.executeQuery("Select * from Archivos where nombreDoc = '"+nombre+"'");
         if(result.next()){
             resultado=true;
         }
-        pstmt.close();
-<<<<<<< HEAD
-          result.close();
-           conn.close();
-=======
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -119,19 +95,13 @@ public class Conexion{
     {
         ResultSet res = null;
         boolean result =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Carpetas where nombre = '"+nombre+"' and raiz = 1")){
-        res = pstmt.executeQuery();
+        try {
+                this.stmt = conn.createStatement();
+        res = stmt.executeQuery("Select * from Carpetas where nombre = '"+nombre+"' and raiz = 1");
         if(res.next()){
             result=true;
         }
-        pstmt.close();
-<<<<<<< HEAD
-            res.close();
-           conn.close();
-=======
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -144,19 +114,13 @@ public class Conexion{
     {
         ResultSet res = null;
         boolean result =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from DocCarp where idDocum =(select idDoc from Archivos where nombreDoc = '"+nombreDoc+"') and idCarpeta =(Select idCarpeta from Carpetas where nombre ='"+nombreCarpet+"')")){
-         res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+         res = stmt.executeQuery("Select * from DocCarp where idDocum =(select idDoc from Archivos where nombreDoc = '"+nombreDoc+"') and idCarpeta =(Select idCarpeta from Carpetas where nombre ='"+nombreCarpet+"')");
         if(res.next()){
             result=true;
         }
-        pstmt.close();
-<<<<<<< HEAD
-            res.close();
-           conn.close();
-=======
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -168,16 +132,12 @@ public class Conexion{
     {
         ResultSet res = null;
         boolean result =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Palabra where nombrePalabra = '"+nombre+"'")){
-         res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+         res = stmt.executeQuery("Select * from Palabra where nombrePalabra = '"+nombre+"'");
         if(res.next()){
             result=true;
         }
-<<<<<<< HEAD
-=======
-        pstmt.close();
->>>>>>> parent of f530aab... reverse
             
         } catch (SQLException e) {
             System.err.println(e.getMessage());
@@ -190,21 +150,13 @@ public class Conexion{
     {
         ResultSet res = null;
         boolean result =false;
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra = "+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc)+"")){
-         res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+         res = stmt.executeQuery("Select * from PalabraDocumento where idPalabra = "+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc)+"");
         if(res.next()){
             result=true;
         }
-<<<<<<< HEAD
-            res.close();        
-            pstmt.close();
-
-           conn.close();
-=======
-        pstmt.close();
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -217,21 +169,13 @@ public class Conexion{
          {
              int num = 0;
              try {
-                 Connection conn = this.connect();
-                 PreparedStatement psmt = conn.prepareStatement("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.nombrePalabra='"+nombre+"'");
-                 ResultSet res = psmt.executeQuery();
+                 
+                 stmt = conn.createStatement();
+                 ResultSet res = stmt.executeQuery("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.nombrePalabra='"+nombre+"'");
                  if(res.next()){
                      num = res.getInt("numero");
                  }
-<<<<<<< HEAD
-            res.close();
-                             psmt.close();
-
-           conn.close();
-=======
-                 psmt.close();
             
->>>>>>> parent of f530aab... reverse
              } catch (SQLException e) {
                  System.err.println(e.getMessage());
              }
@@ -242,21 +186,13 @@ public class Conexion{
          {
              int num = 0;
              try {
-                 Connection conn = this.connect();
-                 PreparedStatement psmt = conn.prepareStatement("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.idPalabra="+id+"");
-                 ResultSet res = psmt.executeQuery();
+                 
+                 stmt = conn.createStatement();
+                 ResultSet res = stmt.executeQuery("Select count(PalabraDocumento.idPalabra)numero from PalabraDocumento, Palabra where PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.idPalabra="+id+"");
                  if(res.next()){
                      num = res.getInt("numero");
                  }
-<<<<<<< HEAD
-            res.close();
-                             psmt.close();
-
-           conn.close();
-=======
-                 psmt.close();
             
->>>>>>> parent of f530aab... reverse
              } catch (SQLException e) {
                  System.err.println(e.getMessage());
              }
@@ -268,23 +204,15 @@ public class Conexion{
          public boolean InsertCarpeta(String nombre,int raiz,String padre)
          {
              boolean result =false;
-             List<String> a = new ArrayList();
              if(!CarpetExist(nombre)){
                 if(raiz==1){
-                   a.add(nombre);
-                   a.add(String.valueOf(raiz));
-                   result = QueryExecute("Insert into Carpetas(nombre,raiz) values (?,?)", a);
+                   result = QueryExecute("Insert into Carpetas(nombre,raiz) values ('"+nombre+"',"+raiz+")");
                 }
                 else
                 {
-                   a.add(nombre);
-                   a.add(String.valueOf(raiz));
-                   result = QueryExecute("Insert into Carpetas(nombre,raiz) values (?,?)", a);
+                   result = QueryExecute("Insert into Carpetas(nombre,raiz) values ('"+nombre+"',"+raiz+")");
                    if(CarpetExist(nombre)){
-                   a=new ArrayList<>();
-                   a.add(String.valueOf(IdCarpeta(padre)));
-                   a.add(String.valueOf(IdCarpeta(nombre)));
-                   result=QueryExecute("Insert into CarpChilds values(?,?)", a);
+                   result=QueryExecute("Insert into CarpChilds values("+IdCarpeta(padre)+","+IdCarpeta(nombre)+")");
                    }else result=false;
                 }
              }
@@ -293,59 +221,35 @@ public class Conexion{
          public boolean InsertArchivo(String nombre,String ruta,String padre)
          {
              boolean result =false;
-             List<String> a = new ArrayList();
              if(!ArchivoExist(nombre)){
-                a.add(nombre);
-                a.add(ruta);
-                result = QueryExecute("Insert into Archivos(nombreDoc,rutaDoc) values (?,?)", a);
+                result = QueryExecute("Insert into Archivos(nombreDoc,rutaDoc) values ('"+nombre+"','"+ruta+"')");
                 if(CarpetExist(padre)){
-                a= new ArrayList<>();
-                a.add(String.valueOf(IdCarpeta(padre)));
-                a.add(String.valueOf(IdArchivo(nombre)));
-                result=QueryExecute("Insert into DocCarp values(?,?)", a);
+                result=QueryExecute("Insert into DocCarp values("+IdCarpeta(padre)+","+IdArchivo(nombre)+")");
                 }else result=false;
              }
              return result;
          }
-<<<<<<< HEAD
-         public boolean InsertPalabra(String nombre,String doc) throws SQLException
-         { if(this.connect().isClosed())
-                 System.err.println("Me cago en dios");
-=======
          public boolean InsertPalabra(String nombre,String doc,int tf,int numTot)
          {
->>>>>>> parent of f530aab... reverse
              boolean result =false;
-             List<String> a = new ArrayList();
                 if(!PalabraExtist(nombre)){
-                a.add(nombre);
-                result = QueryExecute("Insert into Palabra(nombrePalabra) values (?)", a);
+                result = QueryExecute("Insert into Palabra(nombrePalabra) values ('"+nombre+"')");
                 if(ArchivoExist(doc)){
-                a= new ArrayList<>();
-                a.add(String.valueOf(IdPalabra(nombre)));
-                a.add(String.valueOf(IdArchivo(doc)));
-                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values (?,?)", a);
+                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values ("+IdPalabra(nombre)+","+IdArchivo(doc)+")");
                 if(PalabraInsideDocExist(nombre, doc))
                 {
-                    a=new ArrayList();
-                    a.add(String.valueOf((double)tf/numTot));
-                    a.add(String.valueOf(IdRelacion(nombre, doc)));
-                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values (?,?)",a);
+                    double tfs = (double)tf/(double)numTot;
+                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values ("+tfs+","+IdRelacion(nombre, doc)+")");
                 }else result = false;
                 }
                 else result =false;
              }else{
                     if(ArchivoExist(doc)){
-                a= new ArrayList<>();
-                a.add(String.valueOf(IdPalabra(nombre)));
-                a.add(String.valueOf(IdArchivo(doc)));
-                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values (?,?)", a);
+                result=QueryExecute("Insert into PalabraDocumento(idPalabra,idDocumento) values ("+IdPalabra(nombre)+","+IdArchivo(doc)+")");
                 if(PalabraInsideDocExist(nombre, doc))
                 {
-                    a=new ArrayList();
-                    a.add(String.valueOf((double)tf/numTot));
-                    a.add(String.valueOf(IdRelacion(nombre, doc)));
-                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values (?,?)",a);
+                    double tfs = (double)tf/(double)numTot;
+                    result=QueryExecute("Insert into EstadisticasPalabras(tf,idRelacion) values ("+tfs+","+IdRelacion(nombre, doc)+")");
                 }else result = false;
                 }
                 else result =false;
@@ -356,11 +260,8 @@ public class Conexion{
          {
              boolean result =false;
              if(PalabraInsideDocExist(nombrePalabra,nombreDocumento)){
-             List<String> a = new ArrayList();
-             a.add(String.valueOf(idf));
-             a.add(String.valueOf(tf*idf));
-             a.add(String.valueOf(IdRelacion(nombrePalabra, nombreDocumento)));
-             result = QueryExecute("update EstadisticasPalabras set idf = ?, tfidf =? where idRelacion = ?", a);
+             double tfidf=tf*idf;
+             result = QueryExecute("update EstadisticasPalabras set idf = "+idf+", tfidf ="+tfidf+" where idRelacion = "+IdRelacion(nombrePalabra, nombreDocumento));
              }
              return result;
          }
@@ -373,21 +274,13 @@ public class Conexion{
              int result =0;
              if(CarpetExist(nombre))
              {
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Carpetas where nombre = '"+nombre+"'")){
-        ResultSet res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+        ResultSet res = stmt.executeQuery("Select * from Carpetas where nombre = '"+nombre+"'");
         if(res.next()){
             result= res.getInt("idCarpeta");
         }
-<<<<<<< HEAD
-            res.close();
-                    pstmt.close();
-
-           conn.close();
-=======
-        pstmt.close();
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -400,21 +293,13 @@ public class Conexion{
              int result =0;
              if(ArchivoExist(nombre))
              {
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos where nombreDoc = '"+nombre+"'")){
-        ResultSet res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+        ResultSet res = stmt.executeQuery("Select * from Archivos where nombreDoc = '"+nombre+"'");
         if(res.next()){
             result= res.getInt("idDoc");
         }
-<<<<<<< HEAD
-            res.close();
-                    pstmt.close();
-
-           conn.close();
-=======
-        pstmt.close();
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -429,21 +314,13 @@ public class Conexion{
              {
                  List<String> a = new ArrayList();
         a.add(nombre);
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from Palabra where nombrePalabra = '"+nombre+"'")){
-        ResultSet res = pstmt.executeQuery();
+        try {
+                stmt = conn.createStatement();
+        ResultSet res = stmt.executeQuery("Select * from Palabra where nombrePalabra = '"+nombre+"'");
         if(res.next()){
             result= res.getInt("idPalabra");
         }
-<<<<<<< HEAD
-            res.close();
-                    pstmt.close();
-
-           conn.close();
-=======
-        pstmt.close();
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -458,21 +335,13 @@ public class Conexion{
              if(PalabraInsideDocExist(nombrePalabra,nombreDoc))
              {
                         
-        try (Connection conn = this.connect();
-                PreparedStatement pstmt = conn.prepareStatement("Select * from PalabraDocumento where idPalabra ="+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc))){
-        ResultSet res = pstmt.executeQuery();   
+        try {
+                stmt = conn.createStatement();
+        ResultSet res = stmt.executeQuery("Select * from PalabraDocumento where idPalabra ="+IdPalabra(nombrePalabra)+" and idDocumento="+IdArchivo(nombreDoc));   
         if(res.next()){
             result= res.getInt("idRelacion");
         }
-<<<<<<< HEAD
-            res.close();
-                    pstmt.close();
-
-           conn.close();
-=======
-        pstmt.close();
             
->>>>>>> parent of f530aab... reverse
         } catch (SQLException e) {
             System.err.println(e.getMessage());
         }
@@ -480,140 +349,28 @@ public class Conexion{
              return result;
          }
          
-<<<<<<< HEAD
-         /*
-         Esta cosa es para saber el nombre con el id de lo que sea
-         */
-         public String NombrePalabraById(int id){
-             String nombre ="";
-             try(Connection conn = this.connect(); 
-                     PreparedStatement psmt = conn.prepareStatement("Select * from Palabra where idPalabra = "+id)){
-                 ResultSet res = psmt.executeQuery();
-                 if(res.next()){
-                     nombre=res.getString("nombrePalabra");
-                 }
-                 res.close();
-                 psmt.close();
-                 
-           conn.close();
-             }catch(SQLException e){
-                 System.err.println(e.getMessage());
-             }
-             return nombre;
-         }
-         public String NombreCarpetaById(int id){
-             String nombre ="";
-             try(Connection conn = this.connect(); 
-                     PreparedStatement psmt = conn.prepareStatement("Select * from Carpetas where idCarpeta = "+id)){
-                 ResultSet res = psmt.executeQuery();
-                 if(res.next()){
-                     nombre=res.getString("nombre");
-                 }
-                 res.close();
-                 psmt.close();
-                 
-           conn.close();
-             }catch(SQLException e){
-                 System.err.println(e.getMessage());
-             }
-             return nombre;
-         }
-         
-         public String NombreArchivoById(int id){
-             String nombre ="";
-             try(Connection conn = this.connect(); 
-                     PreparedStatement psmt = conn.prepareStatement("Select * from Archivos where idDoc = "+id)){
-                 ResultSet res = psmt.executeQuery();
-                 if(res.next()){
-                     nombre=res.getString("nombreDoc");
-                 }
-                 res.close();
-                 psmt.close();
-           conn.close();
-             }catch(SQLException e){
-                 System.err.println(e.getMessage());
-             }
-             return nombre;
-         }
-         
-         /*
-         Esto es para sacar una lista de palabras con el id o nombre de un archivo
-         */
-         public List<String> PalByDoc(int id){
-             List<String> pal = new ArrayList();
-             try(Connection conn = this.connect();
-                     PreparedStatement psmt = conn.prepareStatement("Select Palabra.nombrePalabra nombrePalabra from Palabra,PalabraDocumento where PalabraDocumento.idPalabra = Palabra.idPalabra and PalabraDocumento.idDocumento="+id)){
-                 ResultSet res = psmt.executeQuery();
-                 while(res.next()){
-                    pal.add(res.getString("nombrePalabra"));
-                 }
-                 res.close();
-                 psmt.close();
-           conn.close();
-             }catch(SQLException e){
-                 System.err.println(e.getMessage());
-             }
-             return pal;
-         }
-         public List<String> PalByDoc(String nombre){
-             List<String> pal = new ArrayList();
-             try(Connection conn = this.connect();
-                     PreparedStatement psmt = conn.prepareStatement("Select Palabra.nombrePalabra nombrePalabra from Palabra,PalabraDocumento where PalabraDocumento.idPalabra = Palabra.idPalabra and PalabraDocumento.idDocumento="+IdArchivo(nombre))){
-                 ResultSet res = psmt.executeQuery();
-                 while(res.next()){
-                    pal.add(res.getString("nombrePalabra"));
-                 }
-                 res.close();
-                 psmt.close();
-           conn.close();
-             }catch(SQLException e){
-                 System.err.println(e.getMessage());
-             }
-             return pal;
-         }
-         //////borrar//////////////////////////////////////////////////////////////////
-=======
          //////borrar
->>>>>>> parent of f530aab... reverse
          public void borrarTodo(){
-             List<String> a =  new ArrayList<String>();
-             QueryExecute("delete from Archivos", a);
-             QueryExecute("Delete from Carpetas", a);
-             QueryExecute("delete from CarpChilds", a);
-             QueryExecute("delete from DocCarp", a);
+             QueryExecute("delete from Archivos");
+             QueryExecute("Delete from Carpetas");
+             QueryExecute("delete from CarpChilds");
+             QueryExecute("delete from DocCarp");
          }
-<<<<<<< HEAD
-         /**
-          * INDEXACIOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOON
-          * @param datos
-          * @return
-          * @throws IOException
-          * @throws TikaException
-          * @throws SQLException 
-          */
-         public List<List> Indexacion(List<List> datos) throws IOException, TikaException, SQLException{
-             
-=======
          public List<List> Indexacion(List<Thread> hilos,List<List> datos) throws IOException, TikaException, SQLException{
              List<List> todo = new ArrayList<>();
->>>>>>> parent of f530aab... reverse
-             try(Connection conn=this.connect();
-                     PreparedStatement pstmt = conn.prepareStatement("Select * from Archivos")){
-                 ResultSet res = pstmt.executeQuery();
+             try{
+                     stmt = conn.createStatement();
+                 ResultSet res = stmt.executeQuery("Select * from Archivos");
                  while(res.next()){
-<<<<<<< HEAD
-                     
-=======
-                     PreparedStatement pstmt2 = conn.prepareStatement("Select * from PalabraDocumento where idDocumento = "+res.getInt("idDoc"));
-                     ResultSet res2 = pstmt2.executeQuery();
+                     Statement stmt2 = conn.createStatement();
+                     ResultSet res2 = stmt2.executeQuery("Select * from PalabraDocumento where idDocumento = "+res.getInt("idDoc"));
                      int k =0;
                      while(res2.next()){
                          k++;
                      }
-                     pstmt2.close();
+                     stmt2.close();
                      if(k==0)
                      {
->>>>>>> parent of f530aab... reverse
                          List<List> lista = anal_isis.Palabras(anal_isis.parseExample(new File(res.getString("rutaDoc"))));
                          datos.add(lista);
                          String nombredoc = res.getString("nombreDoc");
@@ -623,18 +380,10 @@ public class Conexion{
                              }
                          };
                          
-<<<<<<< HEAD
-                     res.close();
-                     pstmt.close();
-           conn.close();
-                 
-=======
                          hilos.add(new Thread(runnable));
                      }
                  }
-                 pstmt.close();
             
->>>>>>> parent of f530aab... reverse
              }catch(SQLException e){
                  System.err.println(e.getMessage());
              }
@@ -661,13 +410,13 @@ public class Conexion{
          {
              boolean resp = false;
              try {
-                 Connection conn = this.connect();
-                 PreparedStatement psmt = conn.prepareStatement("Select * from PalabraDocumento");
-                 ResultSet res = psmt.executeQuery();
+                 
+                 stmt = conn.createStatement();
+                 ResultSet res = stmt.executeQuery("Select * from PalabraDocumento");
                  while(res.next())
                  {
-                     PreparedStatement psmt2 = conn.prepareStatement("select Palabra.nombrePalabra nombrePalabra, Archivos.nombreDoc nombreDoc,EstadisticasPalabras.tf tf from Archivos,Palabra, PalabraDocumento, EstadisticasPalabras where EstadisticasPalabras.idRelacion = PalabraDocumento.idRelacion and PalabraDocumento.idPalabra=Palabra.idPalabra and PalabraDocumento.idDocumento=Archivos.idDoc and PalabraDocumento.idPalabra= "+res.getInt("idPalabra"));
-                     ResultSet res2 = psmt2.executeQuery();
+                     Statement stmt2 = conn.createStatement();
+                     ResultSet res2 = stmt2.executeQuery("select Palabra.nombrePalabra nombrePalabra, Archivos.nombreDoc nombreDoc,EstadisticasPalabras.tf tf from Archivos,Palabra, PalabraDocumento, EstadisticasPalabras where EstadisticasPalabras.idRelacion = PalabraDocumento.idRelacion and PalabraDocumento.idPalabra=Palabra.idPalabra and PalabraDocumento.idDocumento=Archivos.idDoc and PalabraDocumento.idPalabra= "+res.getInt("idPalabra"));
                      while(res2.next()){
                      for(List<List> lista : listaPalabras)
                      {
@@ -676,7 +425,7 @@ public class Conexion{
                              try {
                                  String palara =res2.getString("nombrePalabra");
                                  if(lista.get(0).get(k).equals(palara))
-                                     InsertEstadisticasPalabra(palara, res2.getString("nombreDoc"), ((int)lista.get(1).get(k)/lista.get(1).size()), (Math.log10(listaPalabras.size()/NumDocPalExist(palara))+1));
+                                     InsertEstadisticasPalabra(palara, res2.getString("nombreDoc"), ((double)((int)lista.get(1).get(k))/(double)lista.get(1).size()),(double) (Math.log10(listaPalabras.size()/NumDocPalExist(palara))+1));
                                      } catch (SQLException ex) {
                                  System.err.println(ex.getMessage());
                              }
@@ -684,13 +433,17 @@ public class Conexion{
                      }
                      }
                      }
-                     psmt2.close();
                  }
-                 psmt.close();
             
              } catch (SQLException e) {
                  System.err.println(e.getMessage());
              }
              return resp;
+         }
+         public void CerrarConexion(){
+             try {
+                 conn.close();
+             } catch (Exception e) {
+             }
          }
 }
