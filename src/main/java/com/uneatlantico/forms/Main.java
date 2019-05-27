@@ -12,16 +12,26 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
 import javax.swing.JLabel;
 import com.uneatlantico.database.*;
-import com.uneatlantico.data.*;
+import com.uneatlantico.data.Filtro;
 import java.sql.SQLException;
+import javax.sound.midi.SysexMessage;
+import javax.swing.JOptionPane;
+import javax.swing.filechooser.FileFilter;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableModel;
+import javax.swing.tree.DefaultMutableTreeNode;
+import javax.swing.tree.DefaultTreeModel;
 import org.apache.commons.lang.StringUtils;
 import org.apache.tika.exception.TikaException;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 
 /**
  *
@@ -32,15 +42,12 @@ public class Main extends javax.swing.JFrame {
     /**
      * Creates new form Main
      */
-    private int initWidt,initheight;
     private Conexion conn = new Conexion();
-    private List<Thread> hilos = new ArrayList<>();
     private List<List> datosPalabras = new ArrayList<>();
+    private  Logger Log = Logger.getLogger(this.getClass());
     public Main() throws IOException, TikaException, SQLException {
         initComponents();
-        this.initWidt=this.getWidth();
-        this.initheight=this.getHeight();
-        this.setSize(418, 224);
+        PropertyConfigurator.configure("src\\main\\resources\\files\\log4j.properties");
         JLabel fondo = new JLabel();
         fondo.setSize(this.PaneImage.getWidth(), this.PaneImage.getHeight());
         try {
@@ -48,9 +55,9 @@ public class Main extends javax.swing.JFrame {
             fondo.setIcon(new ImageIcon(image));
             this.PaneImage.add(fondo);
         } catch (IOException ex) {
-            System.err.println(ex.getMessage());
+           Log.error(ex.getMessage());
         }
-        
+        setTree();
     }
     
 
@@ -69,24 +76,42 @@ public class Main extends javax.swing.JFrame {
         txtBusqueda = new javax.swing.JTextField();
         btnBuscar = new javax.swing.JButton();
         PaneImage = new javax.swing.JPanel();
+        jPanel1 = new javax.swing.JPanel();
+        jScrollPane2 = new javax.swing.JScrollPane();
+        jTable1 = new javax.swing.JTable();
         jMenuBar1 = new javax.swing.JMenuBar();
         menuArchivo = new javax.swing.JMenu();
         itemIndexarCarpeta = new javax.swing.JMenuItem();
         itemIndexarArchivo = new javax.swing.JMenuItem();
         menuOpciones = new javax.swing.JMenu();
         jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem2 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
 
+        javax.swing.tree.DefaultMutableTreeNode treeNode1 = new javax.swing.tree.DefaultMutableTreeNode("root");
+        jTree1.setModel(new javax.swing.tree.DefaultTreeModel(treeNode1));
         jScrollPane1.setViewportView(jTree1);
 
         PanelBusqueda.setBorder(new javax.swing.border.SoftBevelBorder(javax.swing.border.BevelBorder.RAISED));
 
+        txtBusqueda.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtBusquedaKeyPressed(evt);
+            }
+        });
+
         btnBuscar.setText("Buscar");
+        btnBuscar.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnBuscarActionPerformed(evt);
+            }
+        });
 
         PaneImage.setBackground(new java.awt.Color(255, 153, 102));
         PaneImage.setForeground(new java.awt.Color(255, 153, 51));
+        PaneImage.setPreferredSize(new java.awt.Dimension(305, 105));
 
         javax.swing.GroupLayout PaneImageLayout = new javax.swing.GroupLayout(PaneImage);
         PaneImage.setLayout(PaneImageLayout);
@@ -96,34 +121,74 @@ public class Main extends javax.swing.JFrame {
         );
         PaneImageLayout.setVerticalGroup(
             PaneImageLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 100, Short.MAX_VALUE)
+            .addGap(0, 105, Short.MAX_VALUE)
         );
+
+        jPanel1.setBackground(new java.awt.Color(255, 102, 102));
+
+        javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
+        jPanel1.setLayout(jPanel1Layout);
+        jPanel1Layout.setHorizontalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 355, Short.MAX_VALUE)
+        );
+        jPanel1Layout.setVerticalGroup(
+            jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGap(0, 0, Short.MAX_VALUE)
+        );
+
+        jTable1.setBackground(new java.awt.Color(0, 0, 0));
+        jTable1.setForeground(new java.awt.Color(255, 255, 255));
+        jTable1.setModel(new javax.swing.table.DefaultTableModel(
+            new Object [][] {
+                {},
+                {},
+                {},
+                {}
+            },
+            new String [] {
+
+            }
+        ));
+        jScrollPane2.setViewportView(jTable1);
 
         javax.swing.GroupLayout PanelBusquedaLayout = new javax.swing.GroupLayout(PanelBusqueda);
         PanelBusqueda.setLayout(PanelBusquedaLayout);
         PanelBusquedaLayout.setHorizontalGroup(
             PanelBusquedaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(PanelBusquedaLayout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(txtBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                .addComponent(btnBuscar, javax.swing.GroupLayout.DEFAULT_SIZE, 98, Short.MAX_VALUE)
+                .addGroup(PanelBusquedaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(PanelBusquedaLayout.createSequentialGroup()
+                        .addContainerGap()
+                        .addComponent(jScrollPane2))
+                    .addGroup(PanelBusquedaLayout.createSequentialGroup()
+                        .addComponent(txtBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, 268, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addComponent(btnBuscar, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addGroup(PanelBusquedaLayout.createSequentialGroup()
+                        .addGap(107, 107, 107)
+                        .addComponent(jPanel1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                        .addGap(0, 0, Short.MAX_VALUE)))
                 .addContainerGap())
-            .addGroup(PanelBusquedaLayout.createSequentialGroup()
-                .addGap(39, 39, 39)
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelBusquedaLayout.createSequentialGroup()
+                .addGap(0, 0, Short.MAX_VALUE)
                 .addComponent(PaneImage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                .addGap(73, 73, 73))
         );
         PanelBusquedaLayout.setVerticalGroup(
             PanelBusquedaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, PanelBusquedaLayout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(PaneImage, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 11, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGap(18, 18, 18)
                 .addGroup(PanelBusquedaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(txtBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(btnBuscar))
-                .addContainerGap())
+                .addGap(25, 25, 25)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 183, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(10, 10, 10))
         );
 
         menuArchivo.setText("Archivo");
@@ -137,6 +202,11 @@ public class Main extends javax.swing.JFrame {
         menuArchivo.add(itemIndexarCarpeta);
 
         itemIndexarArchivo.setText("Indexar Archivo");
+        itemIndexarArchivo.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                itemIndexarArchivoActionPerformed(evt);
+            }
+        });
         menuArchivo.add(itemIndexarArchivo);
 
         jMenuBar1.add(menuArchivo);
@@ -151,6 +221,14 @@ public class Main extends javax.swing.JFrame {
         });
         menuOpciones.add(jMenuItem1);
 
+        jMenuItem2.setText("Borrar Carpeta");
+        jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem2ActionPerformed(evt);
+            }
+        });
+        menuOpciones.add(jMenuItem2);
+
         jMenuBar1.add(menuOpciones);
 
         setJMenuBar(jMenuBar1);
@@ -161,18 +239,18 @@ public class Main extends javax.swing.JFrame {
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                    .addComponent(PanelBusqueda, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jScrollPane1))
+                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(26, 26, 26)
+                .addComponent(PanelBusqueda, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addContainerGap()
-                .addComponent(PanelBusqueda, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 145, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
+                    .addComponent(PanelBusqueda, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jScrollPane1))
                 .addContainerGap())
         );
 
@@ -185,9 +263,10 @@ public class Main extends javax.swing.JFrame {
         chooser.setDialogTitle("Elige el directorio");
         chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
         chooser.setAcceptAllFileFilterUsed(false);
-        
         if(chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION)
         {
+                    Log.info("Se selecciono "+chooser.getSelectedFile().getName());
+
             File fiel = chooser.getSelectedFile();
             /*String[] directories = fiel.list(new FilenameFilter() {
   @Override
@@ -195,7 +274,7 @@ public class Main extends javax.swing.JFrame {
     return new File(current, name).canRead();
   }
 });
-            System.out.println(Arrays.toString(directories));*/
+            Log.info(Arrays.toString(directories));*/
           
         List<String> padres = new ArrayList();
         if(!conn.CarpetExist(fiel.getName())){
@@ -206,11 +285,11 @@ public class Main extends javax.swing.JFrame {
             try {
                 Index();
             } catch (IOException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
-            } catch (TikaException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error(ex.getMessage());
             } catch (SQLException ex) {
-                Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                Log.error(ex.getMessage());
+            } catch (TikaException ex) {
+                Log.error(ex.getMessage());
             }
         }
     }//GEN-LAST:event_itemIndexarCarpetaActionPerformed
@@ -218,6 +297,80 @@ public class Main extends javax.swing.JFrame {
     private void jMenuItem1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem1ActionPerformed
        conn.borrarTodo();
     }//GEN-LAST:event_jMenuItem1ActionPerformed
+
+    private void itemIndexarArchivoActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_itemIndexarArchivoActionPerformed
+        JFileChooser chooser = new JFileChooser();
+        chooser.setCurrentDirectory(new File("."));
+        chooser.setDialogTitle("Elige el archivo");
+        chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        chooser.setAcceptAllFileFilterUsed(false);
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Archivo de texto","txt"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Office doc","doc"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("Office excel","xlsx"));
+        chooser.addChoosableFileFilter(new FileNameExtensionFilter("PDF","pdf"));
+        if(chooser.showOpenDialog(this)==JFileChooser.APPROVE_OPTION)
+        {
+            if(conn.CarpetExist(chooser.getCurrentDirectory().getName()))
+            {
+                if(conn.InsertArchivo(chooser.getSelectedFile().getName(), chooser.getSelectedFile().getPath(), chooser.getCurrentDirectory().getName()))
+                    Log.info("> "+chooser.getName());
+            }
+            else{
+                if(conn.InsertCarpeta(chooser.getCurrentDirectory().getName(), 1, ""))
+                    if(conn.InsertArchivo(chooser.getSelectedFile().getName(), chooser.getSelectedFile().getPath(), chooser.getCurrentDirectory().getName()))
+                    Log.info("> "+chooser.getName());
+            }
+        }
+        try {
+            Index();
+        } catch (IOException ex) {
+            Log.error(ex.getMessage());
+        } catch (TikaException ex) {
+           Log.error(ex.getMessage());
+        } catch (SQLException ex) {
+            Log.error(ex.getMessage());
+        }
+    }//GEN-LAST:event_itemIndexarArchivoActionPerformed
+
+    private void btnBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnBuscarActionPerformed
+        if(txtBusqueda.getText().isEmpty()){
+            MensajeAlerta("Escribe algo que buscar");
+        }
+        else{
+            buscarPalabra(txtBusqueda.getText());
+        }
+    }//GEN-LAST:event_btnBuscarActionPerformed
+
+    private void txtBusquedaKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtBusquedaKeyPressed
+        if(evt.getKeyCode()==java.awt.event.KeyEvent.VK_ENTER)
+        {
+            if(txtBusqueda.getText().isEmpty()){
+                MensajeAlerta("Escribe algo que buscar");
+            }
+            else
+            buscarPalabra(txtBusqueda.getText());
+        }
+    }//GEN-LAST:event_txtBusquedaKeyPressed
+
+    private void jMenuItem2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem2ActionPerformed
+        Borrarfrm borrar = new Borrarfrm("la carpeta",conn,this);
+        borrar.setVisible(true);
+        this.setVisible(false);
+        Thread ttt = new Thread(()->{while(!this.isVisible()){if(borrar.resultado){
+        Log.debug("Esta reindexando despues de borrar");
+            try {
+                Index();
+            } catch (IOException ex) {
+                Log.error(ex.getMessage());
+            } catch (TikaException ex) {
+                Log.error(ex.getMessage());
+            } catch (SQLException ex) {
+                Log.error(ex.getMessage());
+            }Log.debug("Termino de Indexar");break;}
+        }});
+        ttt.start();
+        
+    }//GEN-LAST:event_jMenuItem2ActionPerformed
 /**
  * Funcionessssssssssssssssssssssssssss
  * @param folder
@@ -226,44 +379,64 @@ public class Main extends javax.swing.JFrame {
  */
     public void listFilesForFolder(final File folder, int index,List<String>padres) {
         int indexx=index;
-        System.out.println(index);
-    for (final File fileEntry : folder.listFiles()) {
+        Log.info(index);
+    for (final File fileEntry : folder.listFiles(new Filtro())) {
         if (fileEntry.isDirectory()) {
                 padres.add( fileEntry.getName());
                 if(conn.InsertCarpeta(fileEntry.getName(), 0, padres.get(index)))
-                    System.out.println((StringUtils.repeat("    ",indexx+1))+"-"+fileEntry.getName());
+                    Log.info((StringUtils.repeat("    ",indexx+1))+"-"+fileEntry.getName());
                 indexx++;
             listFilesForFolder(fileEntry,indexx,padres);
         } else {
-            System.out.println(padres.get(indexx));
+            Log.info(padres.get(indexx));
             if(conn.InsertArchivo(fileEntry.getName(), fileEntry.getPath(), padres.get(index)))
-             System.out.println(StringUtils.repeat("   ",indexx+2)+">"+fileEntry.getName());
+             Log.info(StringUtils.repeat("   ",indexx+2)+">"+fileEntry.getName());
         }
     }
 }
+    public void MensajeAlerta(String mensaje){
+        JOptionPane.showMessageDialog(null, mensaje,"Alerta",JOptionPane.WARNING_MESSAGE);
+    }
+    
+    public void buscarPalabra(String palabra){
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("Documento");
+        model.addColumn("Tf-IDF");
+        model=conn.GetDataPalabra(model, palabra);
+        jTable1.setModel(model);
+    }
+    
     public void Index() throws IOException, TikaException, SQLException{
-        List<List> todo = conn.Indexacion(this.hilos,this.datosPalabras);
-        hilos = todo.get(0);
-        datosPalabras=todo.get(1);
-        if(hilos.size()!=0){
-        hilos.forEach(item->{
-            item.start();});
-        Thread terminated = new Thread(()->{
-           while(true){
-               int terminatedThreads=0;
-               for(Thread hilo : hilos){
-                   if(hilo.getState()==Thread.State.TERMINATED){
-                       terminatedThreads++;
-                   }
-               }
-               if(terminatedThreads==hilos.size()){
-                   conn.CalculoPalabra(datosPalabras);
-                   break;
-               }
-           } 
-        });
-        terminated.start();
-        }
+        List<List> todo = conn.Indexacion(this.datosPalabras);
+        if(!todo.get(0).isEmpty()){
+        datosPalabras=todo.get(0);
+                   conn.CalculoPalabra(datosPalabras,todo.get(todo.size()-1));
+                   datosPalabras=new ArrayList();
+                   setTree();}
+        else
+            setTree();
+        
+        
+    }
+    
+    public void setTree(){
+      List<String>Roots = new ArrayList();
+      Roots = conn.getRaices(Roots);
+      DefaultMutableTreeNode root = new DefaultMutableTreeNode();
+      Roots.forEach(item->{
+          DefaultMutableTreeNode Carpeta = new DefaultMutableTreeNode(item);
+          if(conn.HasChilds(item))
+          {   
+             Carpeta = conn.getChilds(Carpeta, item);
+          }
+          if(conn.HasFiles(item))
+          {
+              Carpeta = conn.getFiles(Carpeta, item);
+          }
+          root.add(Carpeta);
+          });
+        DefaultTreeModel model = new DefaultTreeModel(root);
+        jTree1.setModel(model);
     }
     /**
      * @param args the command line arguments
@@ -295,14 +468,15 @@ public class Main extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                try {
+                Logger Logg = Logger.getLogger(Main.class);
+                try { 
                     new Main().setVisible(true);
                 } catch (IOException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    Logg.error(ex.getMessage());
                 } catch (TikaException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    Logg.error(ex.getMessage());
                 } catch (SQLException ex) {
-                    Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
+                    Logg.error(ex.getMessage());
                 }
             }
         });
@@ -316,7 +490,11 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuItem itemIndexarCarpeta;
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
+    private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
+    private javax.swing.JScrollPane jScrollPane2;
+    private javax.swing.JTable jTable1;
     private javax.swing.JTree jTree1;
     private javax.swing.JMenu menuArchivo;
     private javax.swing.JMenu menuOpciones;

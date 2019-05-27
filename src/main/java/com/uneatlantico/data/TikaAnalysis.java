@@ -27,6 +27,7 @@ public class TikaAnalysis {
         List<Integer> listaNum = new ArrayList<>();
         String[] cortado = texto.split("[^a-zA-Z0-9_á-úä-üÁ-ÚÄ-Ü]");
         for(String palabra : cortado ){
+            if(!palabra.isEmpty()){
             if(contienelista(palabra,listaString)){
                 
                         int index = listaString.indexOf(palabra);
@@ -36,7 +37,7 @@ public class TikaAnalysis {
                 listaString.add(palabra);
                 listaNum.add(1);
             }
-        }
+        }}
         lista.add(listaString);
         lista.add(listaNum);
         return lista;
