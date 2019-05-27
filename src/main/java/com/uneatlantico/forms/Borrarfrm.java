@@ -30,7 +30,7 @@ public class Borrarfrm extends javax.swing.JFrame {
         String before = jLabel1.getText();
         before = before.replaceFirst("\\?", Cosa);
         jLabel1.setText(before);
-        conn.GetCarpetas().forEach(item->jComboBox1.addItem(item));
+        SetItems();
         this.setDefaultCloseOperation(HIDE_ON_CLOSE);
     }
 
@@ -98,12 +98,19 @@ public class Borrarfrm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if(Filtro.equals("la carpeta"))
+        if(Filtro.equals("la carpeta")){
         if(conn.BorrarTodoCarpeta(jComboBox1.getSelectedItem().toString()))
         {
-            jComboBox1.removeAllItems();
-        conn.GetCarpetas().forEach(item->jComboBox1.addItem(item));
+            
         resultado=true;
+            SetItems();
+        }}
+        else{
+            if(conn.BorrarTodoArchivo(jComboBox1.getSelectedItem().toString()))
+            {
+                resultado=true;
+                SetItems();
+            }
         }
         
             
@@ -113,8 +120,14 @@ public class Borrarfrm extends javax.swing.JFrame {
         PADRE.setVisible(true);
     }//GEN-LAST:event_formWindowClosing
 /**
- * Funcino para borrar
+ * Funciones
  */
+    public void SetItems(){
+        if(Filtro.equals( "la carpeta"))
+        conn.GetCarpetas().forEach(item->jComboBox1.addItem(item));
+        else
+            conn.GetArchivos().forEach(item->jComboBox1.addItem(item));
+    }
     
     /**
      * @param args the command line arguments

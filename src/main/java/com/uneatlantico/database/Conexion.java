@@ -84,6 +84,22 @@ public class Conexion{
         return carp;
     }
     
+    public List<String> GetArchivos()
+    {
+        List<String> carp = new ArrayList();
+        try {
+            stmt=conn.createStatement();
+            ResultSet res = stmt.executeQuery("Select * from Archivos");
+            while(res.next())
+            {
+                carp.add(res.getString("nombreDoc"));
+            }
+        } catch (Exception e) {
+            Log.error(e.getMessage());
+        }
+        return carp;
+    }
+    
     public DefaultTableModel GetDataPalabra(DefaultTableModel modelo,String palabra){
         try {
             
@@ -561,6 +577,12 @@ public class Conexion{
              QueryExecute("delete from Palabra");
              QueryExecute("delete from PalabraDocumento");
          }
+         
+         /**
+          * Borrar Carpeta
+          * @param nombre
+          * @return 
+          */
          public boolean BorrarTodoCarpeta(String nombre)
     {
         boolean result = false;
@@ -644,6 +666,34 @@ public class Conexion{
         return result;
     }
          
+         /**
+          * Borrar Archivo
+          */
+         public boolean BorrarTodoArchivo(String nombre){
+             boolean result = false;
+             try {
+                 this.stmt = conn.createStatement();
+                  ResultSet res2 = stmt.executeQuery("select * from Archivos where nombreDoc='"+nombre+"'");
+                            while(res2.next()){
+                                Log.debug("Se borran los datos del archivo "+res2.getString("nombreDoc"));
+                                ResultSet res3 = stmt.executeQuery("Select Palabra.nombrePalabra nombrePalabra, Palabra.idPalabra idPalabra from Palabra,PalabraDocumento where PalabraDocumento.idPalabra and PalabraDocumento.idDocumento="+res2.getInt("idDoc"));
+                                while(res3.next()){
+                                    Log.debug("SE esta borrando las palabras del documento "+nombre);
+                                    result =QueryExecute("delete from EstadisticasPalabras where idRelacion ="+IdRelacion(res3.getString("nombrePalabra"), nombre));
+                                    
+                                   result = QueryExecute("delete from PalabraDocumento where idPalabra="+res3.getInt("idPalabra"));
+                                    
+                                    result =QueryExecute("delete from Palabra where idPalabra="+res3.getInt("idPalabra"));
+                                }
+                                
+                               result = QueryExecute("delete from DocCarp where idDocum="+IdArchivo(nombre));
+                               result = QueryExecute("delete from Archivos where idDoc="+IdArchivo(nombre));
+                            }
+             } catch (Exception e) {
+                 Log.error(e.getMessage());
+             }
+             return result;
+         }
          /**
           * Funcinones que manejan palabras
           * @param datos

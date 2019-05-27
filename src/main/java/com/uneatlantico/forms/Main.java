@@ -20,6 +20,7 @@ import com.uneatlantico.database.*;
 import com.uneatlantico.data.Filtro;
 import java.sql.SQLException;
 import javax.sound.midi.SysexMessage;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -84,8 +85,9 @@ public class Main extends javax.swing.JFrame {
         itemIndexarCarpeta = new javax.swing.JMenuItem();
         itemIndexarArchivo = new javax.swing.JMenuItem();
         menuOpciones = new javax.swing.JMenu();
-        jMenuItem1 = new javax.swing.JMenuItem();
+        jMenuItem3 = new javax.swing.JMenuItem();
         jMenuItem2 = new javax.swing.JMenuItem();
+        jMenuItem1 = new javax.swing.JMenuItem();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
         setResizable(false);
@@ -213,13 +215,13 @@ public class Main extends javax.swing.JFrame {
 
         menuOpciones.setText("Opciones");
 
-        jMenuItem1.setText("Borrar todo");
-        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+        jMenuItem3.setText("Borrar Documento");
+        jMenuItem3.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jMenuItem1ActionPerformed(evt);
+                jMenuItem3ActionPerformed(evt);
             }
         });
-        menuOpciones.add(jMenuItem1);
+        menuOpciones.add(jMenuItem3);
 
         jMenuItem2.setText("Borrar Carpeta");
         jMenuItem2.addActionListener(new java.awt.event.ActionListener() {
@@ -228,6 +230,14 @@ public class Main extends javax.swing.JFrame {
             }
         });
         menuOpciones.add(jMenuItem2);
+
+        jMenuItem1.setText("Borrar todo");
+        jMenuItem1.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                jMenuItem1ActionPerformed(evt);
+            }
+        });
+        menuOpciones.add(jMenuItem1);
 
         jMenuBar1.add(menuOpciones);
 
@@ -356,21 +366,16 @@ public class Main extends javax.swing.JFrame {
         Borrarfrm borrar = new Borrarfrm("la carpeta",conn,this);
         borrar.setVisible(true);
         this.setVisible(false);
-        Thread ttt = new Thread(()->{while(!this.isVisible()){if(borrar.resultado){
-        Log.debug("Esta reindexando despues de borrar");
-            try {
-                Index();
-            } catch (IOException ex) {
-                Log.error(ex.getMessage());
-            } catch (TikaException ex) {
-                Log.error(ex.getMessage());
-            } catch (SQLException ex) {
-                Log.error(ex.getMessage());
-            }Log.debug("Termino de Indexar");break;}
-        }});
-        ttt.start();
+        Reindex(borrar);
         
     }//GEN-LAST:event_jMenuItem2ActionPerformed
+
+    private void jMenuItem3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jMenuItem3ActionPerformed
+         Borrarfrm borrar = new Borrarfrm("el documento",conn,this);
+        borrar.setVisible(true);
+        this.setVisible(false);
+        Reindex(borrar);
+    }//GEN-LAST:event_jMenuItem3ActionPerformed
 /**
  * Funcionessssssssssssssssssssssssssss
  * @param folder
@@ -394,6 +399,21 @@ public class Main extends javax.swing.JFrame {
         }
     }
 }
+    public void Reindex(Borrarfrm hijo){
+         Thread ttt = new Thread(()->{while(!this.isVisible()){if(hijo.resultado){
+        Log.debug("Esta reindexando despues de borrar");
+            try {
+                Index();
+            } catch (IOException ex) {
+                Log.error(ex.getMessage());
+            } catch (TikaException ex) {
+                Log.error(ex.getMessage());
+            } catch (SQLException ex) {
+                Log.error(ex.getMessage());
+            }Log.debug("Termino de Indexar");hijo.resultado = false;break;}
+        }});
+        ttt.start();
+    }
     public void MensajeAlerta(String mensaje){
         JOptionPane.showMessageDialog(null, mensaje,"Alerta",JOptionPane.WARNING_MESSAGE);
     }
@@ -491,6 +511,7 @@ public class Main extends javax.swing.JFrame {
     private javax.swing.JMenuBar jMenuBar1;
     private javax.swing.JMenuItem jMenuItem1;
     private javax.swing.JMenuItem jMenuItem2;
+    private javax.swing.JMenuItem jMenuItem3;
     private javax.swing.JPanel jPanel1;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;
