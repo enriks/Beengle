@@ -112,7 +112,7 @@ public class Conexion{
         try {
             
         this.stmt = conn.createStatement();
-        ResultSet res = stmt.executeQuery("SELECT DISTINCT Archivos.nombreDoc nombreDoc, EstadisticasPalabras.tfidf tfidf from Palabra,PalabraDocumento,EstadisticasPalabras,Archivos where PalabraDocumento.idDocumento=Archivos.idDoc and EstadisticasPalabras.idRelacion=PalabraDocumento.idRelacion and PalabraDocumento.idPalabra=Palabra.idPalabra and PalabraDocumento.idPalabra= "+IdPalabra(palabra));
+        ResultSet res = stmt.executeQuery("SELECT DISTINCT Archivos.nombreDoc nombreDoc, EstadisticasPalabras.tfidf tfidf from Palabra,PalabraDocumento,EstadisticasPalabras,Archivos where PalabraDocumento.idDocumento=Archivos.idDoc and EstadisticasPalabras.idRelacion=PalabraDocumento.idRelacion and PalabraDocumento.idPalabra=Palabra.idPalabra and Palabra.nombrePalabra like '%"+palabra+"%'");
         while(res.next()){
             modelo.addRow( new Object[]{res.getString("nombreDoc"),res.getDouble("tfidf")});
         }
