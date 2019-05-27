@@ -67,7 +67,15 @@ public class Conexion{
      * @param raiz
      * @return 
      */
-    
+    public String gerConnState() {
+    	String res ="";
+    	try {
+			res =(conn.isClosed() ? "cerrada" : "abiera");
+		} catch (SQLException e) {
+			Log.error(e.getMessage());
+		}
+    	return res;
+    }
     public List<String> GetCarpetas()
     {
         List<String> carp = new ArrayList();
@@ -188,7 +196,7 @@ public class Conexion{
         return todo;
     }
     /**
-     * jaja si
+     * Si existen datos
      * @param nombre
      * @return 
      */
@@ -282,7 +290,7 @@ public class Conexion{
         boolean result =false;
         try {
                 stmt = conn.createStatement();
-         res = stmt.executeQuery("Select * from CarpChilds where idPadre = '"+IdCarpeta(nombreCarpetF)+" and idHijo ="+IdCarpeta(nombreCarpetS)+"");
+         res = stmt.executeQuery("Select * from CarpChilds where idPadre = "+IdCarpeta(nombreCarpetF)+" and idHijo ="+IdCarpeta(nombreCarpetS)+"");
         if(res.next()){
             result=true;
         }
