@@ -410,7 +410,7 @@ public class Main extends javax.swing.JFrame {
                 Log.error(ex.getMessage());
             } catch (SQLException ex) {
                 Log.error(ex.getMessage());
-            }Log.debug("Termino de Indexar");hijo.resultado = false;break;}
+            }setTree();Log.debug("Termino de Indexar");hijo.resultado = false;break;}
         }});
         ttt.start();
     }

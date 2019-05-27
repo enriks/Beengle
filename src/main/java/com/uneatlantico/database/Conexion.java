@@ -184,7 +184,7 @@ public class Conexion{
         List<String> todo = new ArrayList<String>();
         try {
             this.stmt = conn.createStatement();
-            ResultSet res = stmt.executeQuery("Select Carpetas.nombre nombreCarp, Archivos.nombreDoc nombreDoc from Carpetas,Archivos,DocCarp where DocCarp.idCarpeta = Carpetas.idCarpeta and DocCarp.idDocum = Archivos.idDoc and Carpetas.idCarpeta ="+IdCarpeta(nombre));
+            ResultSet res = stmt.executeQuery("Select Carpetas.nombre nombreCarp, Archivos.nombreDoc nombreDoc from Carpetas,Archivos,DocCarp where DocCarp.idCarpeta = Carpetas.idCarpeta and DocCarp.idDocum = Archivos.idDoc and DocCarp.idCarpeta ="+IdCarpeta(nombre));
                     while(res.next())
                     {
                         todo.add(res.getString("nombreCarp"));
@@ -746,7 +746,6 @@ public class Conexion{
          }
          private boolean manejoPalabras(List<List> lista,String Palabra,String doc,int tf,int j){
              boolean resp=false;
-              Log.info("Empezo el hilo");
                             
                                 
                                      if(InsertPalabra(Palabra, doc,tf, lista.get(0).size())){

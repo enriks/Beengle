@@ -123,6 +123,7 @@ public class Borrarfrm extends javax.swing.JFrame {
  * Funciones
  */
     public void SetItems(){
+        jComboBox1.removeAllItems();
         if(Filtro.equals( "la carpeta"))
         conn.GetCarpetas().forEach(item->jComboBox1.addItem(item));
         else
